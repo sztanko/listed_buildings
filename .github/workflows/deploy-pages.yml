@@ -1,0 +1,106 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_run:
+    workflows: ["Generate Tiles"]
+    types:
+      - completed
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Download tiles artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: tiles
+        path: docs/tiles/
+        run-id: ${{ github.event.workflow_run.id }}
+      continue-on-error: true
+    
+    - name: Check if tiles exist
+      run: |
+        if [ ! -f docs/tiles/listed_buildings.pmtiles ] || [ ! -f docs/tiles/hotspots.pmtiles ]; then
+          echo "Tiles not found. Running tile generation..."
+          
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+          
+          # Install Tippecanoe
+          sudo apt-get install -y git build-essential libsqlite3-dev zlib1g-dev
+          git clone https://github.com/felt/tippecanoe.git
+          cd tippecanoe
+          make -j
+          sudo make install
+          cd ..
+          rm -rf tippecanoe
+          
+          # Install PMTiles
+          wget https://github.com/protomaps/go-pmtiles/releases/latest/download/pmtiles_linux_amd64.tar.gz
+          tar -xzf pmtiles_linux_amd64.tar.gz
+          sudo mv pmtiles /usr/local/bin/
+          rm pmtiles_linux_amd64.tar.gz
+          
+          # Install Python dependencies
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          # Generate tiles
+          python ingest.py
+          python process_native.py
+          
+          mkdir -p docs/tiles
+          
+          tippecanoe -o build/listed_buildings.mbtiles \
+            -l listed_buildings \
+            -z14 -Z4 \
+            --drop-densest-as-needed \
+            --force \
+            build/listed_buildings.geojson
+          
+          tippecanoe -o build/hotspots.mbtiles \
+            -l hotspots \
+            -z14 -Z4 \
+            --force \
+            build/hotspots.geojson
+          
+          pmtiles convert build/listed_buildings.mbtiles docs/tiles/listed_buildings.pmtiles
+          pmtiles convert build/hotspots.mbtiles docs/tiles/hotspots.pmtiles
+        fi
+        
+        echo "Tiles ready for deployment:"
+        ls -lh docs/tiles/
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./docs
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

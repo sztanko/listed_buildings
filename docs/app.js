@@ -2,6 +2,33 @@
 let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol('pmtiles', protocol.tile);
 
+// Parse initial position from URL hash if present
+function getInitialPosition() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        const parts = hash.split('/');
+        if (parts.length === 3) {
+            const zoom = parseFloat(parts[0]);
+            const lat = parseFloat(parts[1]);
+            const lng = parseFloat(parts[2]);
+            
+            if (!isNaN(zoom) && !isNaN(lat) && !isNaN(lng)) {
+                return {
+                    center: [lng, lat],
+                    zoom: zoom
+                };
+            }
+        }
+    }
+    // Return default position if no valid hash
+    return {
+        center: window.MAP_CONFIG.center,
+        zoom: window.MAP_CONFIG.zoom
+    };
+}
+
+const initialPosition = getInitialPosition();
+
 // Initialize map with raster basemap
 const map = new maplibregl.Map({
     container: 'map',
@@ -23,8 +50,8 @@ const map = new maplibregl.Map({
             }
         ]
     },
-    center: window.MAP_CONFIG.center,
-    zoom: window.MAP_CONFIG.zoom,
+    center: initialPosition.center,
+    zoom: initialPosition.zoom,
     maxZoom: 18,
     minZoom: 3
 });
@@ -149,9 +176,12 @@ map.on('load', () => {
         // Build popup content
         let popupContent = '<h4>Listed Building Details</h4><table>';
         
+        // Fields to skip in popup
+        const skipFields = ['easting', 'northing', 'objectid', 'capture_scale', 'national_grid_reference'];
+        
         for (const [key, value] of Object.entries(properties)) {
-            // Skip easting and northing fields
-            if (key.toLowerCase() === 'easting' || key.toLowerCase() === 'northing') {
+            // Skip unwanted fields
+            if (skipFields.includes(key.toLowerCase())) {
                 continue;
             }
             
@@ -160,6 +190,22 @@ map.on('load', () => {
                 const formattedKey = key
                     .replace(/_/g, ' ')
                     .replace(/\b\w/g, l => l.toUpperCase());
+                
+                // Format dates nicely
+                if (key.toLowerCase().includes('date') && value) {
+                    // Parse and format date (assuming format like "11/5/1987 12:00:00 AM")
+                    try {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                            const formattedDate = date.toLocaleDateString('en-GB', options);
+                            popupContent += `<tr><td>${formattedKey}:</td><td>${formattedDate}</td></tr>`;
+                            continue;
+                        }
+                    } catch (e) {
+                        // If date parsing fails, show original value
+                    }
+                }
                 
                 // Make NHLE Link clickable
                 if (key.toLowerCase() === 'nhle_link' && value.startsWith('http')) {
@@ -247,3 +293,38 @@ map.addControl(new maplibregl.ScaleControl({
     maxWidth: 100,
     unit: 'metric'
 }), 'bottom-left');
+
+// Update URL hash when map moves
+function updateHash() {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    const hash = `#${zoom.toFixed(2)}/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}`;
+    window.history.replaceState(null, null, hash);
+}
+
+// Debounce hash updates to avoid too frequent updates
+let hashUpdateTimeout;
+map.on('moveend', () => {
+    clearTimeout(hashUpdateTimeout);
+    hashUpdateTimeout = setTimeout(updateHash, 100);
+});
+
+// Listen for hash changes (e.g., when user navigates back/forward)
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        const parts = hash.split('/');
+        if (parts.length === 3) {
+            const zoom = parseFloat(parts[0]);
+            const lat = parseFloat(parts[1]);
+            const lng = parseFloat(parts[2]);
+            
+            if (!isNaN(zoom) && !isNaN(lat) && !isNaN(lng)) {
+                map.jumpTo({
+                    center: [lng, lat],
+                    zoom: zoom
+                });
+            }
+        }
+    }
+});

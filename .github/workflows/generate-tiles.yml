@@ -1,0 +1,86 @@
+name: Generate Tiles
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  generate-tiles:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gdal-bin libgdal-dev
+        
+    - name: Install Tippecanoe
+      run: |
+        sudo apt-get install -y git build-essential libsqlite3-dev zlib1g-dev
+        git clone https://github.com/felt/tippecanoe.git
+        cd tippecanoe
+        make -j
+        sudo make install
+        cd ..
+        rm -rf tippecanoe
+    
+    - name: Install PMTiles CLI
+      run: |
+        wget https://github.com/protomaps/go-pmtiles/releases/latest/download/pmtiles_linux_amd64.tar.gz
+        tar -xzf pmtiles_linux_amd64.tar.gz
+        sudo mv pmtiles /usr/local/bin/
+        rm pmtiles_linux_amd64.tar.gz
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Generate tiles
+      run: |
+        echo "Ingesting CSV data..."
+        python ingest.py
+        
+        echo "Generating hotspots..."
+        python process_native.py
+        
+        echo "Creating PMTiles..."
+        mkdir -p docs/tiles
+        
+        # Create tiles for points
+        tippecanoe -o build/listed_buildings.mbtiles \
+          -l listed_buildings \
+          -z14 -Z4 \
+          --drop-densest-as-needed \
+          --force \
+          build/listed_buildings.geojson
+        
+        # Create tiles for hotspots
+        tippecanoe -o build/hotspots.mbtiles \
+          -l hotspots \
+          -z14 -Z4 \
+          --force \
+          build/hotspots.geojson
+        
+        # Convert to PMTiles
+        pmtiles convert build/listed_buildings.mbtiles docs/tiles/listed_buildings.pmtiles
+        pmtiles convert build/hotspots.mbtiles docs/tiles/hotspots.pmtiles
+        
+        echo "Tiles generated successfully!"
+        ls -lh docs/tiles/
+    
+    - name: Upload tiles as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tiles
+        path: docs/tiles/*.pmtiles
+        retention-days: 1

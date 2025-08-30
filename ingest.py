@@ -25,11 +25,18 @@ print(f"Processing {len(df)} records...")
 
 # Create a temporary GeoJSON in EPSG:27700
 temp_27700 = tempfile.NamedTemporaryFile(mode='w', suffix='.geojson', delete=False)
+
+# Fields to exclude from the output
+exclude_fields = ['easting', 'northing', 'objectid', 'capture_scale', 'national_grid_reference']
+
 features = []
 for idx, row in df.iterrows():
     # Clean properties - replace NaN with None for JSON compatibility
     properties = {}
-    for key, value in row.drop(['easting', 'northing']).items():
+    for key, value in row.items():
+        # Skip excluded fields
+        if key.lower() in exclude_fields:
+            continue
         if pd.isna(value):
             properties[key] = None
         else:

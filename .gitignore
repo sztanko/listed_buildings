@@ -25,4 +25,7 @@ Thumbs.db
 
 # Project specific
 *.mbtiles
+*.pmtiles
 *.pmtiles.tmp
+*.bak
+docs/tiles/*.pmtiles

@@ -12,8 +12,8 @@ import subprocess
 
 def process_in_27700(input_geojson="build/listed_buildings.geojson",
                      buffer_meters=200,
-                     negative_buffer_meters=180,
-                     min_area_sqm=5000,
+                     negative_buffer_meters=170,
+                     min_area_sqm=8000,
                      min_points=10):
     """
     Process points in EPSG:27700 (British National Grid).
@@ -65,11 +65,6 @@ def process_in_27700(input_geojson="build/listed_buildings.geojson",
     print("Step 3: Merging all chunks...")
     union = unary_union(chunk_unions)
     
-    # Final cleanup pass if needed
-    # if negative_buffer_meters > 0:
-    #     print(f"Step 4: Final cleanup with {negative_buffer_meters}m negative buffer...")
-    #     union = union.buffer(-negative_buffer_meters / 2)  # Smaller final pass
-    
     # Split into parts
     if hasattr(union, 'geoms'):
         parts = list(union.geoms)
@@ -78,51 +73,17 @@ def process_in_27700(input_geojson="build/listed_buildings.geojson",
     
     print(f"Step 5: Filtering {len(parts)} polygons by area AND point count...")
     
-    # We want to keep polygons that have EITHER:
-    # 1. Large area (>= min_area_sqm), OR
-    # 2. Enough points (>= min_points)
-    # But we should exclude small polygons with few points
-    
+    # Much simpler approach: just filter by area
+    # The negative buffer already removes most small/empty fragments
     filtered = []
     excluded_count = 0
     
-    for idx, poly in enumerate(parts):
-        if idx % 1000 == 0 and idx > 0:
-            print(f"  Processed {idx}/{len(parts)} polygons...")
-        
-        # Large polygons are always kept
+    for poly in parts:
+        # Keep polygons with sufficient area
         if poly.area >= min_area_sqm:
-            # But check if it has enough points - if area is large but very few points, exclude it
-            # Use bounding box first for faster filtering
-            bbox = poly.bounds
-            potential_points = [p for p in points if bbox[0] <= p.x <= bbox[2] and bbox[1] <= p.y <= bbox[3]]
-            
-            # Quick check: if there are fewer potential points than min_points, exclude
-            if len(potential_points) < min_points:
-                excluded_count += 1
-                continue
-                
-            # For large areas with potentially enough points, do actual containment check
-            if len(potential_points) < min_points * 2:  # Only check if close to threshold
-                points_within = sum(1 for point in potential_points if poly.contains(point))
-                if points_within < min_points:
-                    excluded_count += 1
-                    continue
-            
             filtered.append(poly)
         else:
-            # Small polygons must have enough points
-            bbox = poly.bounds
-            potential_points = [p for p in points if bbox[0] <= p.x <= bbox[2] and bbox[1] <= p.y <= bbox[3]]
-            
-            if len(potential_points) >= min_points:
-                points_within = sum(1 for point in potential_points if poly.contains(point))
-                if points_within >= min_points:
-                    filtered.append(poly)
-                else:
-                    excluded_count += 1
-            else:
-                excluded_count += 1
+            excluded_count += 1
     
     print(f"  Kept {len(filtered)} polygons, excluded {excluded_count} (min area: {min_area_sqm} sqm, min points: {min_points})")
     
