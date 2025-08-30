@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Listed Buildings Map</title>
+    
+    <!-- MapLibre GL JS -->
+    <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+    
+    <!-- PMTiles -->
+    <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
+    
+    <!-- App styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="map"></div>
+    
+    <!-- Controls -->
+    <div id="controls" class="controls-card">
+        <h3>Layers</h3>
+        <label>
+            <input type="checkbox" id="toggle-hotspots" checked>
+            Hotspot Areas
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-points" checked>
+            Building Points
+        </label>
+        <button id="fit-bounds" class="fit-button">Fit to Data</button>
+    </div>
+    
+    <!-- App configuration and logic -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
