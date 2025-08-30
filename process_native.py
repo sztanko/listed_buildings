@@ -71,34 +71,33 @@ def process_in_27700(input_geojson="build/listed_buildings.geojson",
     else:
         parts = [union] if not union.is_empty else []
     
-    print(f"Step 5: Filtering {len(parts)} polygons by area AND point count...")
+    print(f"Step 5: Filtering {len(parts)} polygons by area...")
+    print(f"  Criteria: area >= {min_area_sqm} sqm")
+    print(f"  Note: Point counting temporarily disabled for performance")
     
-    # Much simpler approach: just filter by area
-    # The negative buffer already removes most small/empty fragments
+    # Simple area-based filtering for now
     filtered = []
     excluded_count = 0
     
     for poly in parts:
-        # Keep polygons with sufficient area
         if poly.area >= min_area_sqm:
-            filtered.append(poly)
+            # For now, set point_count to -1 (not counted)
+            filtered.append((poly, -1))
         else:
             excluded_count += 1
     
-    print(f"  Kept {len(filtered)} polygons, excluded {excluded_count} (min area: {min_area_sqm} sqm, min points: {min_points})")
+    print(f"  Kept {len(filtered)} polygons, excluded {excluded_count}")
     
     # Create GeoJSON in EPSG:27700 with point counts
     print("Step 6: Creating GeoJSON features...")
     features = []
-    for i, poly in enumerate(filtered):
-        # Skip point counting for now (too slow for large datasets)
-        # Could be added as a post-processing step if needed
+    for i, (poly, point_count) in enumerate(filtered):
         features.append({
             "type": "Feature",
             "properties": {
                 "id": i,
                 "area_m2": poly.area,
-                "point_count": -1  # Placeholder, would need optimization for production
+                "point_count": point_count
             },
             "geometry": mapping(poly)
         })
@@ -127,7 +126,7 @@ def process_in_27700(input_geojson="build/listed_buildings.geojson",
     # Clean up temp file
     Path(temp_27700).unlink(missing_ok=True)
     
-    total_area = sum([p.area for p in filtered])
+    total_area = sum([poly.area for poly, _ in filtered])
     print(f"\nComplete! Generated {len(filtered)} hotspots")
     print(f"Total area: {total_area:,.0f} sqm ({total_area/1e6:.2f} sq km)")
 

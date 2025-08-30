@@ -1,12 +1,26 @@
-name: Generate Tiles
+name: Build and Deploy
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  generate-tiles:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
@@ -64,7 +78,7 @@ jobs:
           --force \
           build/listed_buildings.geojson
         
-        # Create tiles for hotspots
+        # Create tiles for hotspots  
         tippecanoe -o build/hotspots.mbtiles \
           -l hotspots \
           -z14 -Z4 \
@@ -78,9 +92,14 @@ jobs:
         echo "Tiles generated successfully!"
         ls -lh docs/tiles/
     
-    - name: Upload tiles as artifacts
-      uses: actions/upload-artifact@v4
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: tiles
-        path: docs/tiles/*.pmtiles
-        retention-days: 1
+        path: ./docs
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

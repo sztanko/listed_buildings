@@ -27,7 +27,9 @@ print(f"Processing {len(df)} records...")
 temp_27700 = tempfile.NamedTemporaryFile(mode='w', suffix='.geojson', delete=False)
 
 # Fields to exclude from the output
-exclude_fields = ['easting', 'northing', 'objectid', 'capture_scale', 'national_grid_reference']
+# Also excluding nhle_link since it always follows the pattern:
+# https://historicengland.org.uk/listing/the-list/list-entry/{list_entry_number}
+exclude_fields = ['easting', 'northing', 'objectid', 'capture_scale', 'national_grid_reference', 'nhle_link']
 
 features = []
 for idx, row in df.iterrows():

@@ -179,6 +179,13 @@ map.on('load', () => {
         // Fields to skip in popup
         const skipFields = ['easting', 'northing', 'objectid', 'capture_scale', 'national_grid_reference'];
         
+        // Generate NHLE link if we have a list entry number
+        const listEntryNumber = properties['list_entry_number'];
+        if (listEntryNumber && listEntryNumber !== 'null' && listEntryNumber !== '') {
+            const nhleUrl = `https://historicengland.org.uk/listing/the-list/list-entry/${listEntryNumber}`;
+            popupContent += `<tr><td>NHLE Link:</td><td><a href="${nhleUrl}" target="_blank" rel="noopener noreferrer" style="color: #0066cc;">View on NHLE</a></td></tr>`;
+        }
+        
         for (const [key, value] of Object.entries(properties)) {
             // Skip unwanted fields
             if (skipFields.includes(key.toLowerCase())) {
@@ -207,12 +214,7 @@ map.on('load', () => {
                     }
                 }
                 
-                // Make NHLE Link clickable
-                if (key.toLowerCase() === 'nhle_link' && value.startsWith('http')) {
-                    popupContent += `<tr><td>${formattedKey}:</td><td><a href="${value}" target="_blank" rel="noopener noreferrer" style="color: #0066cc;">View on NHLE</a></td></tr>`;
-                } else {
-                    popupContent += `<tr><td>${formattedKey}:</td><td>${value}</td></tr>`;
-                }
+                popupContent += `<tr><td>${formattedKey}:</td><td>${value}</td></tr>`;
             }
         }
         
