@@ -290,6 +290,34 @@ document.getElementById('fit-bounds').addEventListener('click', () => {
 // Add navigation controls
 map.addControl(new maplibregl.NavigationControl(), 'top-left');
 
+// Add geolocation control
+const geolocateControl = new maplibregl.GeolocateControl({
+    positionOptions: {
+        enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true,
+    showAccuracyCircle: true,
+    fitBoundsOptions: {
+        maxZoom: 15
+    }
+});
+map.addControl(geolocateControl, 'top-left');
+
+// Optional: Auto-trigger geolocation on load (uncomment if desired)
+// map.on('load', () => {
+//     geolocateControl.trigger();
+// });
+
+// Add event listeners for geolocation events
+geolocateControl.on('geolocate', (e) => {
+    console.log('User location found:', e.coords);
+});
+
+geolocateControl.on('error', (error) => {
+    console.error('Geolocation error:', error);
+});
+
 // Add scale control
 map.addControl(new maplibregl.ScaleControl({
     maxWidth: 100,

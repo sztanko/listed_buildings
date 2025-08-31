@@ -156,6 +156,40 @@ html, body {
     }
 }
 
+/* Geolocation control styles */
+.maplibregl-ctrl-geolocate {
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.maplibregl-ctrl-geolocate:hover {
+    background-color: #f5f5f5;
+}
+
+.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active {
+    color: #0066cc;
+}
+
+.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active-error {
+    color: #e74c3c;
+}
+
+/* User location marker */
+.maplibregl-user-location-dot {
+    background-color: #0066cc;
+    width: 15px;
+    height: 15px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0,0,0,0.25);
+}
+
+.maplibregl-user-location-accuracy-circle {
+    background-color: rgba(0, 102, 204, 0.15);
+    border: 1px solid rgba(0, 102, 204, 0.3);
+}
+
 /* High contrast for accessibility */
 @media (prefers-contrast: high) {
     .controls-card {
