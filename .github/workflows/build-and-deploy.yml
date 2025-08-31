@@ -49,10 +49,12 @@ jobs:
     
     - name: Install PMTiles CLI
       run: |
-        wget https://github.com/protomaps/go-pmtiles/releases/latest/download/pmtiles_linux_amd64.tar.gz
-        tar -xzf pmtiles_linux_amd64.tar.gz
+        # Get the latest release version
+        PMTILES_VERSION=$(curl -s https://api.github.com/repos/protomaps/go-pmtiles/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | sed 's/v//')
+        wget "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz"
+        tar -xzf "go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz"
         sudo mv pmtiles /usr/local/bin/
-        rm pmtiles_linux_amd64.tar.gz
+        rm "go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz"
     
     - name: Install Python dependencies
       run: |

@@ -28,4 +28,4 @@ Thumbs.db
 *.pmtiles
 *.pmtiles.tmp
 *.bak
-docs/tiles/*.pmtiles
+*.pmtiles
