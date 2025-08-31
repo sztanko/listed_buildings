@@ -100,7 +100,7 @@ map.on('load', () => {
         type: 'circle',
         source: 'points',
         'source-layer': 'listed_buildings',
-        minzoom: 10,  // Only show points at zoom level > 10
+        minzoom: 12,  // Only show points at zoom level > 12
         paint: {
             'circle-radius': [
                 'interpolate',

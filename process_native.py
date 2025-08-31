@@ -11,9 +11,9 @@ from pathlib import Path
 import subprocess
 
 def process_in_27700(input_geojson="build/listed_buildings.geojson",
-                     buffer_meters=100,
-                     negative_buffer_meters=90,
-                     min_area_sqm=4000,
+                     buffer_meters=150,
+                     negative_buffer_meters=120,
+                     min_area_sqm=6000,
                      min_points=10):
     """
     Process points in EPSG:27700 (British National Grid).
