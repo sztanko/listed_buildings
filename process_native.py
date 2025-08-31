@@ -12,8 +12,8 @@ import subprocess
 
 def process_in_27700(input_geojson="build/listed_buildings.geojson",
                      buffer_meters=100,
-                     negative_buffer_meters=80,
-                     min_area_sqm=5000,
+                     negative_buffer_meters=90,
+                     min_area_sqm=4000,
                      min_points=10):
     """
     Process points in EPSG:27700 (British National Grid).

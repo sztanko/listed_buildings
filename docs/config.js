@@ -19,6 +19,7 @@ window.MAP_CONFIG = {
         hotspotOutline: 'rgba(255, 150, 50, 0.8)',
         hotspotHover: 'rgba(255, 200, 100, 0.5)',
         gradeIColor: 'rgba(200, 50, 50, 0.8)',  // Red for Grade I
+        gradeIIStarColor: 'rgba(30, 60, 150, 0.8)', // Darker blue for Grade II*
         gradeIIColor: 'rgba(50, 100, 200, 0.7)', // Blue for Grade II
         pointOutline: 'rgba(255, 255, 255, 0.8)'
     }

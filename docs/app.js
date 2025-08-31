@@ -100,7 +100,7 @@ map.on('load', () => {
         type: 'circle',
         source: 'points',
         'source-layer': 'listed_buildings',
-        minzoom: 10,  // Only show points at zoom level > 10
+        minzoom: 12,  // Only show points at zoom level > 12
         paint: {
             'circle-radius': [
                 'interpolate',
@@ -115,7 +115,7 @@ map.on('load', () => {
                 ['==', ['get', 'grade'], 'I'],
                 window.MAP_CONFIG.colors.gradeIColor,
                 ['==', ['get', 'grade'], 'II*'],
-                window.MAP_CONFIG.colors.gradeIColor,  // Grade II* uses same color as Grade I
+                window.MAP_CONFIG.colors.gradeIIStarColor,  // Grade II* uses darker blue
                 window.MAP_CONFIG.colors.gradeIIColor  // Default for Grade II and others
             ],
             'circle-stroke-color': window.MAP_CONFIG.colors.pointOutline,
