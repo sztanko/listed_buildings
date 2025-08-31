@@ -78,6 +78,7 @@ jobs:
           -z14 -Z4 \
           --drop-densest-as-needed \
           --force \
+          --quiet \
           build/listed_buildings.geojson
         
         # Create tiles for hotspots  
@@ -85,6 +86,7 @@ jobs:
           -l hotspots \
           -z14 -Z4 \
           --force \
+          --quiet \
           build/hotspots.geojson
         
         # Convert to PMTiles
