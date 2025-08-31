@@ -100,15 +100,16 @@ map.on('load', () => {
         type: 'circle',
         source: 'points',
         'source-layer': 'listed_buildings',
-        minzoom: 12,  // Only show points at zoom level > 12
+        minzoom: 11,  // Only show points at zoom level >= 11
         paint: {
             'circle-radius': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                10, 1.5,
-                12, 2.5,
-                14, 4
+                11, 0.25,
+                14, 2.5,
+                16, 4,
+                18, 12
             ],
             'circle-color': [
                 'case',
@@ -259,32 +260,13 @@ map.on('load', () => {
         });
 });
 
-// Layer toggle controls
-document.getElementById('toggle-hotspots').addEventListener('change', (e) => {
-    const visibility = e.target.checked ? 'visible' : 'none';
-    map.setLayoutProperty('hotspots-fill', 'visibility', visibility);
-    map.setLayoutProperty('hotspots-outline', 'visibility', visibility);
-});
-
-document.getElementById('toggle-points').addEventListener('change', (e) => {
-    const visibility = e.target.checked ? 'visible' : 'none';
-    map.setLayoutProperty('points-layer', 'visibility', visibility);
-});
-
-// Fit to data button
-document.getElementById('fit-bounds').addEventListener('click', () => {
-    if (dataBounds) {
-        map.fitBounds(dataBounds, {
-            padding: 50,
-            duration: 1000
-        });
-    } else {
-        // Default to UK bounds
-        map.fitBounds([[-8, 49], [2, 61]], {
-            padding: 50,
-            duration: 1000
-        });
-    }
+// Legend collapse functionality
+document.getElementById('toggle-legend').addEventListener('click', () => {
+    const legendCard = document.getElementById('legend');
+    const toggleButton = document.getElementById('toggle-legend');
+    
+    legendCard.classList.toggle('collapsed');
+    toggleButton.textContent = legendCard.classList.contains('collapsed') ? '▶' : '▼';
 });
 
 // Add navigation controls
